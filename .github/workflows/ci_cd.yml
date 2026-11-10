@@ -1,0 +1,48 @@
+
+name: CI/CD Pipeline
+
+# Déclencheurs du pipeline
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Définition des jobs
+jobs:
+
+  # JOB 1 : Exécuter les tests
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Lancer les tests
+        run: pytest -q
+
+  # JOB 2 : Construire l'image Docker
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Construire l'image Docker
+        run: docker build -t myapp:${{ github.sha }} .
+
+      - name: Confirmer le build
+        run: echo "Image construite avec le tag myapp:${GITHUB_SHA}"
+
